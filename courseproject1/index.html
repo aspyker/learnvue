@@ -43,8 +43,10 @@
         <div class="small-12 columns">
             <ul>
                 <li v-for="move in moves"
-                    :class="move.type === 'heroTurn' ? 'log ul player-turn' : 'log ul monster-turn'">
-                {{ move.summary }}</li>
+                    :class="{
+                        'player-turn': move.type === 'heroTurn',
+                        'monster-turn': move.type === 'monTurn'
+                    }">{{ move.summary }}</li>
             </ul>
         </div>
     </section>
