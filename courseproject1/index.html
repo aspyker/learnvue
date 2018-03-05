@@ -26,12 +26,12 @@
             </div>
         </div>
     </section>
-    <section class="row controls">
+    <section v-show="!gameStarted" class="row controls">
         <div class="small-12 columns">
             <button id="start-game" @click="startNewGameClicked">START NEW GAME</button>
         </div>
     </section>
-    <section class="row controls">
+    <section v-show="gameStarted" class="row controls">
         <div class="small-12 columns">
             <button id="attack" @click="attackClicked">ATTACK</button>
             <button id="special-attack" @click="specialAttackClicked">SPECIAL ATTACK</button>
@@ -39,7 +39,7 @@
             <button id="give-up" @click="giveUpClicked">GIVE UP</button>
         </div>
     </section>
-    <section class="row log">
+    <section v-show="gameStarted" class="row log">
         <div class="small-12 columns">
             <ul>
                 <li v-for="move in moves"
@@ -53,6 +53,7 @@
 new Vue({
     el: '#app',
     data: {
+        gameStarted: false,
         heroHealth: 100,
         monHealth: 100,
         moves: []
@@ -74,27 +75,31 @@ new Vue({
     methods: {
         startNewGameClicked: function() {
             console.log("start new game clicked");
+            this.gameStarted = true;
             this.heroHealth = 100;
             this.monHealth = 100;
             this.moves = [];
         },
         attackClicked: function() {
             console.log("attack clicked");
-            this.playerTurn();
+            this.playerTurn(10);
             this.monsterTurn();
+            this.checkIfWon();
         },
         specialAttackClicked: function() {
             console.log("special attack clicked");
+            this.playerTurn(30);
+            this.monsterTurn();
+            this.checkIfWon();
         },
         healClicked: function() {
             console.log("heal clicked");
-            this.heroHealth++;
-            if (this.heroHealth > 100) {
-                this.heroHealth = 100;
-            }
+            this.playerHeal(10);
+            this.monsterTurn();
         },
         giveUpClicked: function() {
             console.log("give up clicked");
+            this.gameStarted = false;
         },
 
         // common functions
@@ -109,11 +114,11 @@ new Vue({
                 return "red";
             }
         },
-        playerTurn: function() {
+        playerTurn: function(maxAttack) {
             var curMonHealth  = this.monHealth;
             var curHeroHealth = this.heroHealth;
 
-            var monAttack = Math.floor(Math.random() * 10) + 1;
+            var monAttack = Math.floor(Math.random() * maxAttack) + 1;
 
             this.monHealth -= monAttack;
             if (this.monHealth < 0) {
@@ -122,6 +127,25 @@ new Vue({
 
             move = {
                 summary: "atack from hero (" + curMonHealth + " -> " + this.monHealth + ")" + " " +
+                "hero (" + curHeroHealth + " -> " + this.heroHealth + ")",
+                type: 'heroTurn'
+            }
+
+            this.moves.push(move);            
+        },
+        playerHeal: function(maxHeal) {
+            var curMonHealth  = this.monHealth;
+            var curHeroHealth = this.heroHealth;
+
+            var heroHeal = Math.floor(Math.random() * maxHeal) + 1;
+
+            this.heroHealth += heroHeal;
+            if (this.heroHealth > 100) {
+                this.heroHealth = 100;
+            }
+
+            move = {
+                summary: "heal to hero (" + curMonHealth + " -> " + this.monHealth + ")" + " " +
                 "hero (" + curHeroHealth + " -> " + this.heroHealth + ")",
                 type: 'heroTurn'
             }
@@ -146,6 +170,15 @@ new Vue({
             }
 
             this.moves.push(move);            
+        },
+        checkIfWon: function() {
+            if (this.monHealth === 0) {
+                console.log("health = 0");
+                setTimeout(function() {
+                    console.log("calling console");
+                    confirm("you won the game");
+                }, 500)
+            }
         }
     }
 });
